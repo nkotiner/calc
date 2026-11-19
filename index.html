@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"CalculatorPlus","short_name":"Calc","start_url":".","display":"standalone","theme_color":"%231a1a1a","background_color":"%231a1a1a","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%2796%27 fill=%27%231a1a1a%27/%3E%3Crect x=%27128%27 y=%27120%27 width=%27256%27 height=%2772%27 rx=%2716%27 fill=%27%232b2b2b%27/%3E%3Cg fill=%27%23f0f0f0%27%3E%3Ccircle cx=%27164%27 cy=%27264%27 r=%2724%27/%3E%3Ccircle cx=%27256%27 cy=%27264%27 r=%2724%27/%3E%3Ccircle cx=%27348%27 cy=%27264%27 r=%2724%27/%3E%3Ccircle cx=%27164%27 cy=%27344%27 r=%2724%27/%3E%3Ccircle cx=%27256%27 cy=%27344%27 r=%2724%27/%3E%3Ccircle cx=%27164%27 cy=%27424%27 r=%2724%27/%3E%3Ccircle cx=%27256%27 cy=%27424%27 r=%2724%27/%3E%3C/g%3E%3Crect x=%27312%27 y=%27320%27 width=%2772%27 height=%2716%27 rx=%278%27 fill=%27%23f0a04b%27/%3E%3Crect x=%27312%27 y=%27368%27 width=%2772%27 height=%2716%27 rx=%278%27 fill=%27%23f0a04b%27/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any"}]}'>
+<title>CalculatorPlus</title>
+<style>
+:root{
+  --bg:#1a1a1a; --card:#262626; --btn:#2b2b2b; --btn2:#353535;
+  --text:#f0f0f0; --muted:#8a8a8a; --op:#8fb4e0; --eq:#f0a04b;
+  --eqbg:#3b2a17; --danger:#e0574f; --line:#343434; --sheet:#202020;
+}
+html[data-theme="midnight"]{
+  --bg:#0f1621; --card:#18212f; --btn:#1f2a3a; --btn2:#28354a;
+  --text:#eaf1fb; --muted:#7d8ea6; --op:#7fb3ff; --eq:#ffa94d;
+  --eqbg:#33260f; --danger:#ff6b6b; --line:#25303f; --sheet:#131c28;
+}
+html[data-theme="warm"]{
+  --bg:#1d1712; --card:#2a211a; --btn:#33281f; --btn2:#3e3227;
+  --text:#f7efe6; --muted:#a08b78; --op:#e0b48a; --eq:#ff9a3c;
+  --eqbg:#3d2a13; --danger:#ff7a5c; --line:#3a2e24; --sheet:#251c15;
+}
+html[data-theme="light"]{
+  --bg:#f2f3f5; --card:#ffffff; --btn:#ffffff; --btn2:#eceef1;
+  --text:#17181a; --muted:#6b7280; --op:#2563eb; --eq:#f97316;
+  --eqbg:#ffe8d6; --danger:#dc2626; --line:#e3e5e9; --sheet:#ffffff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);color:var(--text);overflow:hidden;
+  font:400 16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  transition:background .2s,color .2s;
+}
+#app{height:100dvh;display:flex;flex-direction:column;position:relative;max-width:560px;margin:0 auto}
+.top{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 8px;
+}
+.sq{
+  width:46px;height:46px;border:0;border-radius:14px;background:var(--btn);
+  color:var(--text);font-size:18px;display:grid;place-items:center;cursor:pointer;
+}
+.sq:active{background:var(--btn2)}
+#micBtn{color:var(--eq);font-size:20px}
+#micBtn.live{background:var(--danger);color:#fff;animation:pulse 1.1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,87,79,.55)}50%{box-shadow:0 0 0 11px rgba(224,87,79,0)}}
+
+.cmdbar{display:grid;grid-template-columns:1fr auto;gap:8px;padding:0 14px 8px}
+.cmdbar.hide{display:none}
+.cmdbar input{
+  background:var(--card);border:1px solid var(--line);color:var(--text);
+  border-radius:14px;padding:13px 14px;font-size:16px;font-family:inherit;min-width:0;
+}
+.cmdbar input:focus{outline:2px solid var(--eq);outline-offset:-1px}
+.cmdbar button{
+  width:52px;border:0;border-radius:14px;background:var(--eqbg);color:var(--eq);
+  font-size:20px;cursor:pointer;
+}
+.cdwrap{grid-column:1/-1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;cursor:pointer}
+.cd{height:100%;width:0;background:var(--eq);border-radius:3px}
+
+.card{
+  margin:4px 14px 10px;background:var(--card);border-radius:18px;
+  padding:14px 16px 10px;display:flex;flex-direction:column;min-height:150px;
+  flex:1;justify-content:space-between;overflow:hidden;
+}
+.cardTop{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex:1}
+.mem{font-size:12px;color:var(--muted);align-self:flex-start;min-height:16px;letter-spacing:.4px}
+.big{
+  font-size:clamp(38px,12vw,58px);font-weight:300;letter-spacing:-1.5px;
+  text-align:right;word-break:break-all;max-width:100%;line-height:1.1;margin-top:auto;
+}
+.big.heard{color:var(--eq);font-size:clamp(20px,6vw,28px);font-weight:400;letter-spacing:0}
+.cardBot{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+.prev{flex:1;text-align:right;font-size:15px;color:var(--muted);word-break:break-all;max-height:2.8em;overflow:hidden}
+.mini{
+  border:0;background:transparent;color:var(--muted);font-size:16px;
+  padding:8px;cursor:pointer;border-radius:10px;position:relative;flex:0 0 auto;
+}
+.mini:active{background:var(--btn2)}
+.mini.dot::after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--eq)}
+
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:0 14px 8px}
+.pad button{
+  border:0;border-radius:16px;background:var(--btn);color:var(--text);
+  font-size:27px;font-weight:300;height:clamp(64px,12vh,86px);cursor:pointer;
+  transition:transform .06s,background .12s;
+}
+.pad button:active{transform:scale(.955);background:var(--btn2)}
+.pad .memrow{font-size:15px;font-weight:500;color:var(--muted);height:clamp(42px,7vh,54px);background:transparent}
+.pad .memrow:active{background:var(--btn)}
+.pad .op{color:var(--op);font-size:30px}
+.pad .clr{color:var(--danger);font-weight:400}
+.pad .eq{background:var(--eqbg);color:var(--eq);font-weight:500}
+
+.foot{
+  text-align:center;font-size:11px;color:var(--muted);letter-spacing:.6px;
+  padding:2px 12px calc(8px + env(safe-area-inset-bottom));line-height:1.5;
+}
+
+.sheet{position:absolute;inset:0;background:var(--bg);z-index:40;display:flex;flex-direction:column}
+.sheet.hide{display:none}
+.sheetHead{display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 16px 8px}
+.sheetHead h2{margin:0;font-size:15px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase}
+
+#histList{flex:1;overflow-y:auto;padding:2px 0 10px}
+.hrow{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
+.hrow:active,.hrow.pulse{background:var(--card)}
+.hmain{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.hmeta{display:flex;align-items:center;gap:8px;width:100%;justify-content:space-between;font-size:10px;letter-spacing:1.1px;color:var(--muted);text-transform:uppercase}
+.hnote{font-size:11px;color:var(--eq);text-align:right;max-width:100%;word-break:break-word}
+.hexpr{font-size:17px;text-align:right;word-break:break-all}
+.hres{font-size:13px;text-align:right;color:var(--muted);word-break:break-all}
+.empty{color:var(--muted);text-align:center;padding:60px 24px;font-size:13px;line-height:1.9}
+.sheetFoot{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.sheetFoot button{border:0;background:transparent;padding:17px;font-size:14px;cursor:pointer;color:var(--text)}
+.sheetFoot button:first-child{border-right:1px solid var(--line)}
+.sheetFoot button:active{background:var(--card)}
+.sheetFoot .warn{color:var(--danger)}
+
+#convBody{flex:1;overflow-y:auto;padding:0 16px}
+.block{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px}
+.block label{font-size:10px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:7px}
+input[type=number],select{
+  width:100%;background:var(--btn);border:1px solid var(--line);color:var(--text);
+  border-radius:12px;padding:15px;font-size:18px;font-family:inherit;appearance:none;
+}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+select{font-size:15px;padding:15px 10px}
+input:focus,select:focus{outline:2px solid var(--op);outline-offset:-1px}
+.row{display:flex;gap:9px;align-items:stretch}
+.row .swap{width:52px;flex:0 0 auto;border:0;border-radius:12px;background:var(--btn2);color:var(--op);font-size:20px;cursor:pointer}
+.out{font-size:clamp(26px,8vw,36px);font-weight:400;text-align:right;word-break:break-all;padding:10px 2px 0}
+.rate{font-size:12px;color:var(--muted);text-align:right;margin-top:6px}
+.dash{width:100%;border:1px dashed var(--line);background:transparent;color:var(--muted);padding:13px;border-radius:12px;font-size:13px;cursor:pointer;margin-top:11px}
+.dash:active{color:var(--text)}
+
+#drawer{position:absolute;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;flex-direction:column}
+#drawer.hide{display:none}
+.drawerPanel{
+  background:var(--sheet);border-radius:0 0 22px 22px;
+  padding:calc(14px + env(safe-area-inset-top)) 16px 18px;
+  display:flex;flex-direction:column;gap:6px;max-width:560px;width:100%;margin:0 auto;
+  box-shadow:0 20px 40px rgba(0,0,0,.4);max-height:100%;overflow-y:auto;
+}
+.drawerPanel h3{margin:0 0 8px;font-size:15px;letter-spacing:1.8px;text-transform:uppercase}
+.dbtn{border:0;background:var(--btn);color:var(--text);text-align:left;padding:15px 16px;border-radius:13px;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.dbtn:active{background:var(--btn2)}
+.dbtn span{color:var(--muted);font-size:12px}
+.swatches{display:flex;gap:9px;padding:4px 0 2px}
+.sw{width:44px;height:44px;border-radius:12px;border:2px solid transparent;cursor:pointer}
+.sw.on{border-color:var(--text)}
+.sw[data-t="dark"]{background:#1a1a1a}
+.sw[data-t="midnight"]{background:#0f1621}
+.sw[data-t="warm"]{background:#2a211a}
+.sw[data-t="light"]{background:#f2f3f5}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:15px 16px;background:var(--btn);border-radius:13px;font-size:15px}
+.switch{width:48px;height:28px;border-radius:14px;background:var(--btn2);position:relative;cursor:pointer;flex:0 0 auto}
+.switch.on{background:var(--eq)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--text);transition:.16s}
+.switch.on::after{left:23px}
+.seg{display:flex;gap:6px;padding:4px 0 2px}
+.seg button{flex:1;border:1px solid var(--line);background:transparent;color:var(--muted);padding:11px 4px;border-radius:11px;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--eqbg);color:var(--eq);border-color:var(--eq)}
+.tip{font-size:12px;color:var(--muted);line-height:1.6;padding:4px 2px}
+
+#toast{
+  position:fixed;left:50%;bottom:100px;transform:translate(-50%,16px);
+  background:var(--card);border:1px solid var(--line);color:var(--text);
+  padding:11px 17px;border-radius:12px;font-size:13px;opacity:0;
+  transition:.2s;pointer-events:none;z-index:99;max-width:86vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="top">
+    <button class="sq" id="menuBtn" aria-label="Menu">☰</button>
+    <button class="sq" id="micBtn" aria-label="Voice">◉</button>
+    <button class="sq" id="cmdBtn" aria-label="Type a command">⌨</button>
+    <button class="sq" id="histBtn" aria-label="History">☷</button>
+  </div>
+
+  <div class="cmdbar hide" id="cmdBar">
+    <input id="cmdInput" type="text" placeholder="Type or dictate: 60 plus 50" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button id="cmdGo" aria-label="Run">→</button>
+    <div class="cdwrap" id="cdWrap"><div class="cd" id="cd"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="cardTop">
+      <div class="mem" id="memLine"></div>
+      <div class="big" id="mainLine">0</div>
+    </div>
+    <div class="cardBot">
+      <button class="mini" id="noteBtn" aria-label="Note">✎</button>
+      <div class="prev" id="exprLine"></div>
+      <button class="mini" id="copyBtn" aria-label="Copy">⧉</button>
+    </div>
+  </div>
+
+  <div class="pad">
+    <button class="memrow" data-k="mc">mc</button>
+    <button class="memrow" data-k="mplus">m+</button>
+    <button class="memrow" data-k="mminus">m−</button>
+    <button class="memrow" data-k="mr">mr</button>
+
+    <button class="clr" data-k="ac">C</button>
+    <button class="op" data-k="pct">%</button>
+    <button data-k="neg">±</button>
+    <button class="op" data-k="op" data-v="÷">÷</button>
+
+    <button data-k="num" data-v="7">7</button>
+    <button data-k="num" data-v="8">8</button>
+    <button data-k="num" data-v="9">9</button>
+    <button class="op" data-k="op" data-v="×">×</button>
+
+    <button data-k="num" data-v="4">4</button>
+    <button data-k="num" data-v="5">5</button>
+    <button data-k="num" data-v="6">6</button>
+    <button class="op" data-k="op" data-v="−">−</button>
+
+    <button data-k="num" data-v="1">1</button>
+    <button data-k="num" data-v="2">2</button>
+    <button data-k="num" data-v="3">3</button>
+    <button class="op" data-k="op" data-v="+">+</button>
+
+    <button data-k="num" data-v="0">0</button>
+    <button data-k="num" data-v=".">.</button>
+    <button data-k="del">⌫</button>
+    <button class="eq" data-k="eq">=</button>
+  </div>
+
+  <div class="foot" id="footHint">Tap ⌨, then the mic on your keyboard</div>
+
+  <section class="sheet hide" id="histSheet">
+    <div class="sheetHead">
+      <h2>History</h2>
+      <button class="sq" id="histClose" aria-label="Close">✕</button>
+    </div>
+    <div id="histList"></div>
+    <div class="sheetFoot">
+      <button class="warn" id="clearAll">Clear history</button>
+      <button id="histClose2">Close</button>
+    </div>
+  </section>
+
+  <section class="sheet hide" id="convSheet">
+    <div class="sheetHead">
+      <h2>Convert</h2>
+      <div style="display:flex;gap:8px">
+        <button class="sq" id="refreshRates" aria-label="Refresh">⟳</button>
+        <button class="sq" id="convClose" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div id="convBody">
+      <div class="block">
+        <label for="amt">Amount</label>
+        <input type="number" id="amt" inputmode="decimal" placeholder="0" step="any">
+        <button class="dash" id="useLast">↩ Use last result</button>
+      </div>
+      <div class="block">
+        <label for="fromSel">From</label>
+        <div class="row">
+          <select id="fromSel"></select>
+          <button class="swap" id="swapBtn" aria-label="Swap">⇅</button>
+        </div>
+      </div>
+      <div class="block">
+        <label for="toSel">To</label>
+        <select id="toSel"></select>
+        <div class="out" id="convOut">—</div>
+        <div class="rate" id="rateLine"></div>
+        <button class="dash" id="copyConv">⧉ Copy converted amount</button>
+      </div>
+    </div>
+    <div class="sheetFoot">
+      <button id="convClose2" style="grid-column:1/-1">Close</button>
+    </div>
+  </section>
+
+  <div id="drawer" class="hide">
+    <div class="drawerPanel">
+      <h3>Menu</h3>
+      <button class="dbtn" id="goConv">Currency converter <span>→</span></button>
+      <button class="dbtn" id="goHist">History <span>→</span></button>
+      <button class="dbtn" id="goFull">Full screen <span>⤢</span></button>
+      <button class="dbtn" id="goClear">Clear history <span>✕</span></button>
+      <div class="toggle">Speak answers aloud <div class="switch" id="speakSw"></div></div>
+      <div class="dbtn" style="cursor:default;display:block">
+        Auto-run after dictation
+        <div class="seg" id="autoSeg">
+          <button data-d="0">Off</button>
+          <button data-d="1800">1.8s</button>
+          <button data-d="2800">2.8s</button>
+          <button data-d="4500">4.5s</button>
+        </div>
+      </div>
+      <div class="dbtn" style="cursor:default;display:block">
+        Theme
+        <div class="swatches" style="margin-top:10px">
+          <button class="sw" data-t="dark"></button>
+          <button class="sw" data-t="midnight"></button>
+          <button class="sw" data-t="warm"></button>
+          <button class="sw" data-t="light"></button>
+        </div>
+      </div>
+      <div class="tip" id="voiceTip"></div>
+      <button class="dbtn" id="drawerClose" style="justify-content:center">Close</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var $ = function(s){ return document.querySelector(s); };
+var LS_H="cp.history.v1", LS_R="cp.rates.v1", LS_P="cp.prefs.v1", LS_M="cp.mem.v1";
+var MAX_H = 400;
+
+var expr = "", result = null, fresh = false, pendingNote = "";
+var mem = 0, hasMem = false;
+var history = [], rates = null, ratesAt = 0;
+var speakOn = false, listening = false, autoDelay = 2800;
+
+var tT;
+function toast(msg){
+  var t = $("#toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(tT); tT = setTimeout(function(){ t.classList.remove("show"); }, 2100);
+}
+function load(k, fb){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }
+function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+function fmt(n){
+  if (!isFinite(n)) return "Error";
+  var a = Math.abs(n);
+  if (a !== 0 && (a < 1e-6 || a >= 1e15)) return n.toExponential(6);
+  return n.toLocaleString("en-US", { maximumFractionDigits: 10 });
+}
+
+function evaluate(src){
+  var e = src.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/,/g,"");
+  e = e.replace(/(\d[\d.]*)([+\-])(\d[\d.]*)%/g, "($1$2($1*$3/100))");
+  e = e.replace(/(\d[\d.]*)%/g, "($1/100)");
+  e = e.replace(/[+\-*/]+$/, "");
+  if (!e.trim()) return null;
+  if (!/^[\d+\-*/.() ]+$/.test(e)) throw new Error("bad");
+  var v = Function('"use strict";return (' + e + ')')();
+  if (typeof v !== "number" || !isFinite(v)) throw new Error("bad");
+  return v;
+}
+
+function render(){
+  $("#memLine").textContent = hasMem ? "m = " + fmt(mem) : "";
+  $("#noteBtn").classList.toggle("dot", pendingNote !== "");
+  $("#mainLine").classList.remove("heard");
+  if (result !== null){
+    $("#exprLine").textContent = expr;
+    $("#mainLine").textContent = fmt(result);
+  } else {
+    $("#exprLine").textContent = pendingNote ? pendingNote : "";
+    $("#mainLine").textContent = expr === "" ? "0" : expr;
+  }
+}
+
+function press(k, v){
+  if (k === "ac"){ expr=""; result=null; fresh=false; pendingNote=""; render(); return; }
+  if (k === "del"){
+    if (fresh){ result=null; fresh=false; }
+    expr = expr.slice(0,-1); render(); return;
+  }
+  if (k === "num"){
+    if (fresh){ expr=""; result=null; fresh=false; }
+    if (v === "."){
+      var tail = expr.split(/[+\-×÷−]/).pop();
+      if (tail.indexOf(".") > -1) return;
+      if (tail === "") expr += "0";
+    }
+    if (expr === "0" && v !== ".") expr = v; else expr += v;
+    render(); return;
+  }
+  if (k === "op"){
+    if (fresh && result !== null){ expr = String(result); result=null; fresh=false; }
+    if (expr === ""){ if (v === "−") expr = "−"; else return; }
+    else if (/[+\-×÷−]$/.test(expr)) expr = expr.slice(0,-1) + v;
+    else expr += v;
+    render(); return;
+  }
+  if (k === "pct"){
+    if (expr === "" || /[+\-×÷−]$/.test(expr)) return;
+    expr += "%"; render(); return;
+  }
+  if (k === "neg"){
+    if (fresh && result !== null){ expr = String(result); result=null; fresh=false; }
+    var m = expr.match(/(\d[\d.]*)$/);
+    if (!m){ if (expr === ""){ expr = "−"; render(); } return; }
+    var start = expr.length - m[1].length, before = expr.slice(0,start);
+    expr = (before.slice(-1) === "−" && (start === 1 || /[+\-×÷]/.test(before.slice(-2,-1))))
+      ? before.slice(0,-1) + m[1] : before + "−" + m[1];
+    render(); return;
+  }
+  if (k === "eq"){
+    if (!expr) return;
+    var val;
+    try { val = evaluate(expr); } catch(e){ toast("Can't compute that"); return; }
+    if (val === null) return;
+    result = val; fresh = true;
+    pushHistory(expr, val, pendingNote, false);
+    pendingNote = ""; render(); return;
+  }
+  if (k === "mc"){ mem=0; hasMem=false; save(LS_M,{m:0,h:false}); toast("Memory cleared"); render(); return; }
+  if (k === "mr"){
+    if (!hasMem){ toast("Memory empty"); return; }
+    if (fresh){ expr=""; result=null; fresh=false; }
+    expr += String(mem); render(); return;
+  }
+  if (k === "mplus" || k === "mminus"){
+    var base = (result !== null && fresh) ? result : (expr ? (function(){ try { return evaluate(expr); } catch(e){ return null; } })() : null);
+    if (base === null || !isFinite(base)){ toast("Nothing to store"); return; }
+    mem = hasMem ? (k === "mplus" ? mem + base : mem - base) : (k === "mplus" ? base : -base);
+    hasMem = true; save(LS_M, {m: mem, h: true});
+    toast(k === "mplus" ? "Added to memory" : "Subtracted from memory");
+    render();
+  }
+}
+
+$(".pad").addEventListener("click", function(e){
+  var b = e.target.closest("button");
+  if (b) press(b.getAttribute("data-k"), b.getAttribute("data-v"));
+});
+
+function copyText(txt){
+  if (!txt) return;
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toast("Copied"); }, function(){ fallbackCopy(txt); });
+  } else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  var ta = document.createElement("textarea");
+  ta.value = txt; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); toast("Copied"); } catch(e){ toast("Copy failed"); }
+  document.body.removeChild(ta);
+}
+$("#copyBtn").onclick = function(){
+  var val = result !== null ? result : (expr ? (function(){ try { return evaluate(expr); } catch(e){ return null; } })() : null);
+  if (val === null){ toast("Nothing to copy"); return; }
+  copyText(String(val));
+};
+$("#noteBtn").onclick = function(){
+  var n = prompt("Note for this calculation:", pendingNote || "");
+  if (n === null) return;
+  pendingNote = n.trim(); render();
+};
+
+/* ================= COMMAND BAR ================= */
+
+var autoTimer = null, cdEl = $("#cd"), cdWrap = $("#cdWrap");
+
+function openCmd(){ $("#cmdBar").classList.remove("hide"); setTimeout(function(){ $("#cmdInput").focus(); }, 60); }
+function closeCmd(){ clearTimeout(autoTimer); $("#cmdBar").classList.add("hide"); cdEl.style.width = "0%"; $("#cmdInput").blur(); }
+
+function submitCmd(){
+  clearTimeout(autoTimer);
+  cdEl.style.transition = "none"; cdEl.style.width = "0%";
+  var v = $("#cmdInput").value.trim();
+  if (!v) return;
+  if (runVoice(v)){ $("#cmdInput").value = ""; }
+  setTimeout(function(){ try { $("#cmdInput").focus(); } catch(e){} }, 30);
+}
+
+function scheduleAuto(){
+  clearTimeout(autoTimer);
+  if (!autoDelay) { cdEl.style.transition = "none"; cdEl.style.width = "0%"; return; }
+  cdEl.style.transition = "none";
+  cdEl.style.width = "0%";
+  void cdEl.offsetWidth;
+  cdEl.style.transition = "width " + autoDelay + "ms linear";
+  cdEl.style.width = "100%";
+  autoTimer = setTimeout(function(){
+    if ($("#cmdInput").value.trim()) submitCmd();
+  }, autoDelay);
+}
+
+$("#cmdBtn").onclick = function(){
+  if ($("#cmdBar").classList.contains("hide")) openCmd(); else closeCmd();
+};
+$("#cmdGo").onclick = submitCmd;
+cdWrap.onclick = function(){ if ($("#cmdInput").value.trim()) submitCmd(); };
+
+var cmdInput = $("#cmdInput");
+cmdInput.addEventListener("input", scheduleAuto);
+cmdInput.addEventListener("compositionend", function(){ clearTimeout(autoTimer); setTimeout(submitCmd, 110); });
+cmdInput.addEventListener("keydown", function(e){
+  if (e.key === "Enter"){ e.preventDefault(); submitCmd(); }
+  if (e.key === "Escape"){ e.preventDefault(); closeCmd(); }
+});
+
+/* ================= VOICE / PARSER ================= */
+
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+var recog = null;
+
+var NUM_SMALL = {zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,
+  eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,
+  twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+var NUM_SCALE = {hundred:100,thousand:1000,million:1e6,billion:1e9,trillion:1e12};
+var NUM_EXTRA = {half:0.5,quarter:0.25,a:0,an:0};
+
+function isNumTok(t){
+  return (t in NUM_SMALL) || (t in NUM_SCALE) || (t in NUM_EXTRA) || t === "point" || t === "and" || /^\d+$/.test(t);
+}
+
+function flushBuf(buf){
+  var total = 0, cur = 0, dec = null, sawNum = false;
+  for (var i = 0; i < buf.length; i++){
+    var tok = buf[i];
+    if (tok === "and") continue;
+    if (tok === "point"){ dec = ""; continue; }
+    if (dec !== null && /^\d$/.test(tok)){ dec += tok; continue; }
+    if (/^\d+$/.test(tok)){ if (dec !== null) dec += tok; else cur += parseInt(tok,10); sawNum = true; continue; }
+    if (tok in NUM_SMALL){ cur += NUM_SMALL[tok]; sawNum = true; continue; }
+    if (tok in NUM_EXTRA){ cur += NUM_EXTRA[tok]; sawNum = true; continue; }
+    if (tok in NUM_SCALE){
+      var s = NUM_SCALE[tok];
+      if (s < 1000) cur = (cur || 1) * s;
+      else { total += (cur || 1) * s; cur = 0; }
+      sawNum = true; continue;
+    }
+  }
+  var v = total + cur;
+  if (dec !== null && dec !== "") v = parseFloat(v + "." + dec);
+  return sawNum ? String(v) : buf.join(" ");
+}
+
+function wordsToDigits(text){
+  var toks = text.split(/\s+/), out = [], buf = [];
+  for (var i = 0; i < toks.length; i++){
+    var t = toks[i];
+    if (isNumTok(t)){
+      if (t === "and" && (!buf.length || !isNumTok(toks[i+1] || ""))){ out.push(flushBuf(buf)); buf = []; out.push("and"); continue; }
+      buf.push(t);
+    } else {
+      if (buf.length){ out.push(flushBuf(buf)); buf = []; }
+      out.push(t);
+    }
+  }
+  if (buf.length) out.push(flushBuf(buf));
+  return out.join(" ");
+}
+
+var CUR_ALIAS = {};
+(function(){
+  var pairs = {
+    USD:["dollar","dollars","buck","bucks","usd","greenback"],
+    EUR:["euro","euros","eur"], GBP:["pound","pounds","sterling","gbp","quid"],
+    JPY:["yen","jpy"], INR:["rupee","rupees","inr"], AUD:["aud"], CAD:["cad"],
+    CHF:["franc","francs","chf"], CNY:["yuan","cny","renminbi"], BRL:["real","reais","brl"],
+    MXN:["peso","pesos","mxn"], ZAR:["rand","zar"], KRW:["won","krw"], THB:["baht","thb"],
+    SGD:["sgd"], HKD:["hkd"], NZD:["nzd"], SEK:["sek"], NOK:["nok"], DKK:["dkk"],
+    PLN:["pln"], TRY:["lira","try"], AED:["dirham","dirhams","aed"], SAR:["riyal","sar"],
+    ILS:["shekel","ils"], RUB:["ruble","rubles"], UAH:["hryvnia"],
+    BTC:["bitcoin","btc","satoshi","satoshis"], ETH:["ethereum","eth","ether"],
+    SOL:["solana","sol"], XRP:["ripple","xrp"], DOGE:["dogecoin","doge"],
+    ADA:["cardano","ada"], LTC:["litecoin","ltc"], BCH:["bch"], AVAX:["avalanche","avax"],
+    DOT:["polkadot","dot"], LINK:["chainlink","link"], XLM:["stellar","xlm"],
+    USDT:["tether","usdt"], USDC:["usdc"], DAI:["dai"], SHIB:["shiba","shib"], PEPE:["pepe"]
+  };
+  for (var code in pairs) pairs[code].forEach(function(w){ CUR_ALIAS[w] = code; });
+})();
+
+function curCode(word){
+  if (!word) return null;
+  var w = word.trim().toLowerCase();
+  if (CUR_ALIAS[w]) return CUR_ALIAS[w];
+  var up = w.toUpperCase();
+  if (/^[A-Z]{3,4}$/.test(up)) return up;
+  return null;
+}
+
+function speak(text){
+  if (!speakOn || !window.speechSynthesis) return;
+  try {
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.05; u.pitch = 1;
+    speechSynthesis.speak(u);
+  } catch(e){}
+}
+
+function normalize(s){
+  return s.toLowerCase()
+    .replace(/[,]/g, "")
+    .replace(/\bwhat's\b/g, "whats")
+    .replace(/\bmultiplied by\b/g, "times")
+    .replace(/\bdivided by\b/g, "divided")
+    .replace(/\bdivide by\b/g, "divided")
+    .replace(/\bhow much is\b/g, "convert")
+    .replace(/\bhow many\b/g, "convert")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseConversion(t){
+  var body = t.replace(/^(convert|exchange|change|calculate|compute)\s+/, "");
+  var m = body.match(/^(.+?)\s+(?:to|in|into)\s+([a-z]+)$/);
+  if (!m) return null;
+  var head = m[1].trim(), toWord = m[2].trim();
+  var to = curCode(toWord);
+  if (!to) return null;
+
+  var from = null;
+  var words = head.split(/\s+/);
+  var f = curCode(words[words.length - 1]);
+  if (f){ from = f; words.pop(); head = words.join(" "); }
+
+  var amt = evaluate(wordsToDigits(head).replace(/[^0-9+\-*/%. ]/g, " ").trim());
+  if (amt === null || !isFinite(amt)) return null;
+  return { amount: amt, from: from, to: to };
+}
+
+function parseMath(t){
+  var s = t.replace(/^(whats|what is|calculate|compute|solve|how much is)\s+/, "");
+  s = s.replace(/\b(squared)\b/g, "times itself");
+  s = wordsToDigits(s);
+
+  s = s.replace(/(\d[\d.]*)\s*times itself/g, "($1*$1)");
+  s = s.replace(/(\d[\d.]*)\s*percent of\s*(\d[\d.]*)/g, "($2*$1/100)");
+  s = s.replace(/(\d[\d.]*)\s*percent/g, "$1%");
+  s = s.replace(/\bhalf of\b/g, "0.5*");
+  s = s.replace(/\bplus\b|\badd\b|\band\b|\bsum of\b/g, "+");
+  s = s.replace(/\bminus\b|\bsubtract\b|\bless\b|\btake away\b/g, "-");
+  s = s.replace(/\btimes\b|\bmultiply\b|\bx\b|\binto\b/g, "*");
+  s = s.replace(/\bdivided\b|\bover\b/g, "/");
+  s = s.replace(/\bof\b/g, "*");
+
+  s = s.split(/\s+/).filter(function(w){ return /^[\d+\-*/%.()]+$/.test(w); }).join("");
+
+  if (!/\d/.test(s)) return null;
+  if (!/[+\-*/%]/.test(s)) return null;
+
+  try { var v = evaluate(s); return (v === null) ? null : { expr: s, value: v }; }
+  catch(e){ return null; }
+}
+
+function runVoice(raw){
+  var t = normalize(raw);
+  if (!t) return false;
+  try {
+    var conv = parseConversion(t);
+    if (conv){
+      if (conv.from) fromSel.value = conv.from;
+      toSel.value = conv.to;
+      $("#amt").value = String(conv.amount);
+      savePrefs();
+      openConv();
+      ensureRates().then(function(){
+        convert();
+        var out = $("#convOut").textContent;
+        if (out && out !== "—") speak(conv.amount + " " + (conv.from || fromSel.value) + " is " + out + " " + conv.to);
+      });
+      toast("Converting " + conv.amount + " " + (conv.from || fromSel.value) + " → " + conv.to);
+      return true;
+    }
+    var math = parseMath(t);
+    if (math){
+      expr = math.expr.replace(/\*/g, "×").replace(/\//g, "÷").replace(/-/g, "−");
+      result = math.value; fresh = true;
+      pushHistory(expr, math.value, "", true);
+      render();
+      speak(fmt(math.value));
+      return true;
+    }
+    toast('"' + raw + '" — no math. Edit it above');
+    return false;
+  } catch(e){ toast("Didn't catch that"); return false; }
+}
+
+function startListen(){
+  if (!SR){ openCmd(); toast("Now hit the mic on your keyboard"); return; }
+  if (listening){ try { recog.stop(); } catch(e){} return; }
+  if (!window.isSecureContext){ toast("Voice needs the https link"); return; }
+
+  try {
+    recog = new SR();
+    recog.lang = "en-US";
+    recog.interimResults = true;
+    recog.continuous = false;
+    recog.maxAlternatives = 1;
+
+    recog.onstart = function(){
+      listening = true;
+      $("#micBtn").classList.add("live");
+      $("#footHint").textContent = "Listening…";
+      $("#mainLine").textContent = "…";
+      $("#mainLine").classList.add("heard");
+      $("#exprLine").textContent = "";
+    };
+    recog.onresult = function(ev){
+      var interim = "", final = "";
+      for (var i = ev.resultIndex; i < ev.results.length; i++){
+        var r = ev.results[i];
+        if (r.isFinal) final += r[0].transcript; else interim += r[0].transcript;
+      }
+      if (interim) $("#mainLine").textContent = interim;
+      if (final){ $("#mainLine").textContent = final; runVoice(final.trim()); }
+    };
+    recog.onerror = function(ev){
+      if (ev.error === "not-allowed") toast("Microphone blocked");
+      else if (ev.error === "no-speech") toast("Heard nothing");
+      else toast("Voice error: " + ev.error);
+    };
+    recog.onend = function(){
+      listening = false;
+      $("#micBtn").classList.remove("live");
+      $("#footHint").textContent = defaultHint();
+      if ($("#mainLine").textContent === "…") $("#mainLine").textContent = "0";
+    };
+    recog.start();
+  } catch(e){ openCmd(); }
+}
+$("#micBtn").onclick = startListen;
+
+function defaultHint(){
+  return SR ? 'Tap ◉ and say "60 plus 50"' : "Tap ⌨, dictate, then pause";
+}
+
+/* ================= HISTORY ================= */
+
+function pushHistory(src, val, note, voice){
+  history.unshift({ e: src, r: val, n: note || "", v: !!voice, t: Date.now() });
+  if (history.length > MAX_H) history.length = MAX_H;
+  save(LS_H, history);
+}
+
+function stamp(ts){
+  var d = new Date(ts);
+  var mo = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][d.getMonth()];
+  var h = d.getHours(), ap = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return mo + " " + d.getDate() + ", " + h + ":" + String(d.getMinutes()).padStart(2,"0") + " " + ap;
+}
+
+function renderHistory(){
+  var list = $("#histList");
+  list.innerHTML = "";
+  if (!history.length){
+    list.innerHTML = '<div class="empty">No history yet.<br>Every calculation you finish lands here.</div>';
+    return;
+  }
+  history.forEach(function(h, i){
+    var row = document.createElement("div");
+    row.className = "hrow";
+    var main = document.createElement("div");
+    main.className = "hmain";
+
+    var meta = document.createElement("div");
+    meta.className = "hmeta";
+    var time = document.createElement("span");
+    time.textContent = stamp(h.t) + (h.v ? " · voice" : "");
+    var icons = document.createElement("span");
+    icons.style.display = "flex"; icons.style.gap = "10px";
+    var noteIco = document.createElement("button");
+    noteIco.className = "mini"; noteIco.textContent = "✎";
+    noteIco.style.padding = "2px 4px"; noteIco.style.fontSize = "12px";
+    if (h.n) noteIco.classList.add("dot");
+    var dots = document.createElement("button");
+    dots.className = "mini"; dots.textContent = "⋮";
+    dots.style.padding = "2px 4px"; dots.style.fontSize = "14px";
+    icons.appendChild(noteIco); icons.appendChild(dots);
+    meta.appendChild(time); meta.appendChild(icons);
+
+    var ex = document.createElement("div");
+    ex.className = "hexpr"; ex.textContent = h.e;
+    var res = document.createElement("div");
+    res.className = "hres"; res.textContent = "= " + fmt(h.r);
+
+    main.appendChild(meta);
+    if (h.n){
+      var nb = document.createElement("div");
+      nb.className = "hnote"; nb.textContent = h.n;
+      main.appendChild(nb);
+    }
+    main.appendChild(ex); main.appendChild(res);
+    row.appendChild(main);
+
+    var lp;
+    function reuse(){
+      expr = h.e; result = null; fresh = false; pendingNote = h.n || "";
+      render(); closeHist(); toast("Loaded into calculator");
+    }
+    row.addEventListener("click", function(ev){
+      if (ev.target === noteIco || ev.target === dots) return;
+      reuse();
+    });
+    row.addEventListener("pointerdown", function(){
+      lp = setTimeout(function(){
+        row.classList.add("pulse");
+        setTimeout(function(){ row.classList.remove("pulse"); }, 260);
+        reuse();
+      }, 420);
+    });
+    row.addEventListener("pointerup", function(){ clearTimeout(lp); });
+    row.addEventListener("pointerleave", function(){ clearTimeout(lp); });
+
+    dots.onclick = function(ev){
+      ev.stopPropagation();
+      var pick = prompt("1 = Copy result\n2 = Edit note\n3 = Delete\n\nType 1, 2 or 3:", "1");
+      if (pick === "1") copyText(String(h.r));
+      else if (pick === "2"){
+        var n = prompt("Note:", h.n || "");
+        if (n !== null){ h.n = n.trim(); save(LS_H, history); renderHistory(); }
+      } else if (pick === "3"){ history.splice(i,1); save(LS_H, history); renderHistory(); }
+    };
+    noteIco.onclick = function(ev){
+      ev.stopPropagation();
+      var n = prompt("Note:", h.n || "");
+      if (n !== null){ h.n = n.trim(); save(LS_H, history); renderHistory(); }
+    };
+    list.appendChild(row);
+  });
+}
+
+function openHist(){ renderHistory(); $("#histSheet").classList.remove("hide"); }
+function closeHist(){ $("#histSheet").classList.add("hide"); }
+$("#histBtn").onclick = openHist;
+$("#histClose").onclick = closeHist;
+$("#histClose2").onclick = closeHist;
+$("#clearAll").onclick = function(){
+  if (!history.length){ toast("Already empty"); return; }
+  if (confirm("Clear all history?")){ history = []; save(LS_H, history); renderHistory(); }
+};
+
+/* ================= DRAWER / SETTINGS ================= */
+
+function openDrawer(){ $("#drawer").classList.remove("hide"); }
+function closeDrawer(){ $("#drawer").classList.add("hide"); }
+$("#menuBtn").onclick = openDrawer;
+$("#drawerClose").onclick = closeDrawer;
+$("#drawer").onclick = function(e){ if (e.target === $("#drawer")) closeDrawer(); };
+$("#goHist").onclick = function(){ closeDrawer(); openHist(); };
+$("#goConv").onclick = function(){ closeDrawer(); openConv(); };
+$("#goClear").onclick = function(){ closeDrawer(); $("#clearAll").click(); };
+
+$("#goFull").onclick = function(){
+  closeDrawer();
+  var el = document.documentElement;
+  var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+  if (fn){
+    try {
+      fn.call(el).then(function(){ toast("Tap the screen edge to exit"); })
+        .catch(function(){ toast("Refused — use the browser menu"); });
+    } catch(e){ toast("Use the browser menu for full screen"); }
+  } else { toast("No full screen here — try Brave"); }
+};
+
+autoDelay = load(LS_P + ".auto", 2800);
+document.querySelectorAll("#autoSeg button").forEach(function(b){
+  b.classList.toggle("on", parseInt(b.getAttribute("data-d"),10) === autoDelay);
+  b.onclick = function(){
+    autoDelay = parseInt(b.getAttribute("data-d"), 10);
+    save(LS_P + ".auto", autoDelay);
+    document.querySelectorAll("#autoSeg button").forEach(function(x){ x.classList.toggle("on", x === b); });
+    toast(autoDelay ? "Auto-run in " + (autoDelay/1000) + "s" : "Auto-run off");
+  };
+});
+
+speakOn = load(LS_P + ".speak", false);
+$("#speakSw").classList.toggle("on", speakOn);
+$("#speakSw").onclick = function(){
+  speakOn = !speakOn;
+  save(LS_P + ".speak", speakOn);
+  $("#speakSw").classList.toggle("on", speakOn);
+  toast(speakOn ? "Answers will be spoken" : "Answers muted");
+};
+
+document.querySelectorAll(".sw").forEach(function(s){
+  s.onclick = function(){
+    document.documentElement.setAttribute("data-theme", s.getAttribute("data-t"));
+    save(LS_P + ".theme", s.getAttribute("data-t"));
+    document.querySelectorAll(".sw").forEach(function(x){ x.classList.toggle("on", x === s); });
+  };
+});
+var savedTheme = load(LS_P + ".theme", "dark");
+document.documentElement.setAttribute("data-theme", savedTheme);
+document.querySelectorAll(".sw").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-t") === savedTheme); });
+
+/* ================= CONVERTER ================= */
+
+var CUR = [
+  ["USD","US Dollar"],["EUR","Euro"],["GBP","British Pound"],["JPY","Japanese Yen"],
+  ["CAD","Canadian Dollar"],["AUD","Australian Dollar"],["CHF","Swiss Franc"],
+  ["CNY","Chinese Yuan"],["INR","Indian Rupee"],["BRL","Brazilian Real"],
+  ["MXN","Mexican Peso"],["ZAR","South African Rand"],["SEK","Swedish Krona"],
+  ["NOK","Norwegian Krone"],["DKK","Danish Krone"],["PLN","Polish Zloty"],
+  ["CZK","Czech Koruna"],["HUF","Hungarian Forint"],["TRY","Turkish Lira"],
+  ["ILS","Israeli Shekel"],["AED","UAE Dirham"],["SAR","Saudi Riyal"],
+  ["SGD","Singapore Dollar"],["HKD","Hong Kong Dollar"],["KRW","South Korean Won"],
+  ["TWD","Taiwan Dollar"],["THB","Thai Baht"],["IDR","Indonesian Rupiah"],
+  ["MYR","Malaysian Ringgit"],["PHP","Philippine Peso"],["VND","Vietnamese Dong"],
+  ["NGN","Nigerian Naira"],["KES","Kenyan Shilling"],["EGP","Egyptian Pound"],
+  ["ARS","Argentine Peso"],["CLP","Chilean Peso"],["COP","Colombian Peso"],
+  ["PEN","Peruvian Sol"],["UAH","Ukrainian Hryvnia"],["RON","Romanian Leu"],
+  ["NZD","New Zealand Dollar"],["ISK","Icelandic Krona"],["BGN","Bulgarian Lev"],
+  ["BTC","Bitcoin"],["ETH","Ethereum"],["SOL","Solana"],["XRP","XRP"],
+  ["DOGE","Dogecoin"],["ADA","Cardano"],["LTC","Litecoin"],["BCH","Bitcoin Cash"],
+  ["AVAX","Avalanche"],["DOT","Polkadot"],["LINK","Chainlink"],["XLM","Stellar"],
+  ["ATOM","Cosmos"],["NEAR","NEAR"],["ALGO","Algorand"],["ETC","Ethereum Classic"],
+  ["USDT","Tether"],["USDC","USD Coin"],["DAI","Dai"],["SHIB","Shiba Inu"],
+  ["PEPE","Pepe"],["BONK","Bonk"],["MATIC","Polygon"]
+];
+var CRYPTO = {};
+CUR.forEach(function(c, i){ if (i >= 44) CRYPTO[c[0]] = 1; });
+
+var fromSel = $("#fromSel"), toSel = $("#toSel");
+CUR.forEach(function(c){
+  [fromSel, toSel].forEach(function(sel){
+    var o = document.createElement("option");
+    o.value = c[0]; o.textContent = c[0] + " — " + c[1];
+    sel.appendChild(o);
+  });
+});
+var prefs = load(LS_P, {});
+fromSel.value = prefs.from || "USD";
+toSel.value = prefs.to || "EUR";
+
+function savePrefs(){ save(LS_P, { from: fromSel.value, to: toSel.value }); }
+function openConv(){ $("#convSheet").classList.remove("hide"); ensureRates().then(convert); }
+function closeConv(){ $("#convSheet").classList.add("hide"); }
+$("#convClose").onclick = closeConv;
+$("#convClose2").onclick = closeConv;
+
+function ensureRates(force){
+  if (!force && rates && Date.now() - ratesAt < 5*60*1000) return Promise.resolve();
+  var cached = load(LS_R, null);
+  if (!force && cached && Date.now() - cached.at < 24*3600*1000 && !rates){
+    rates = cached.r; ratesAt = cached.at;
+  }
+  var sources = [
+    function(){ return fetch("https://api.coinbase.com/v2/exchange-rates?currency=USD")
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.data || !j.data.rates) throw 0;
+        var o = {}; for (var k in j.data.rates) o[k] = parseFloat(j.data.rates[k]);
+        return o;
+      }); },
+    function(){ return fetch("https://open.er-api.com/v6/latest/USD")
+      .then(function(r){ return r.json(); })
+      .then(function(j){ if (!j || !j.rates) throw 0; return j.rates; }); },
+    function(){ return fetch("https://api.frankfurter.app/latest?from=USD")
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.rates) throw 0;
+        var o = { USD: 1 }; for (var k in j.rates) o[k] = j.rates[k];
+        return o;
+      }); }
+  ];
+  function tryNext(i){
+    if (i >= sources.length){ if (!rates) toast("Rates unavailable — check connection"); return Promise.resolve(); }
+    return sources[i]().then(function(r){
+      r.USD = 1; rates = r; ratesAt = Date.now(); save(LS_R, { at: ratesAt, r: r });
+    }).catch(function(){ return tryNext(i+1); });
+  }
+  return tryNext(0);
+}
+
+function convert(){
+  var amt = parseFloat($("#amt").value);
+  var outEl = $("#convOut"), rateEl = $("#rateLine");
+  var f = fromSel.value, t = toSel.value;
+  if (!rates || !isFinite(amt)){ outEl.textContent = "—"; rateEl.textContent = ""; return; }
+  var rf = rates[f], rt = rates[t];
+  if (!rf || !rt){ outEl.textContent = "—"; rateEl.textContent = "Rate not available for this pair"; return; }
+  var one = rt / rf, val = amt * one;
+  var dec = (CRYPTO[t] || CRYPTO[f]) ? 8 : 2;
+  outEl.textContent = val.toLocaleString("en-US", { maximumFractionDigits: dec });
+  rateEl.textContent = "1 " + f + " = " + one.toLocaleString("en-US", { maximumFractionDigits: 8 }) + " " + t;
+}
+
+$("#amt").addEventListener("input", convert);
+fromSel.onchange = function(){ savePrefs(); convert(); };
+toSel.onchange = function(){ savePrefs(); convert(); };
+$("#swapBtn").onclick = function(){
+  var a = fromSel.value;
+  fromSel.value = toSel.value; toSel.value = a;
+  savePrefs(); convert();
+};
+$("#refreshRates").onclick = function(){
+  ratesAt = 0;
+  ensureRates(true).then(function(){ convert(); toast("Rates updated"); });
+};
+$("#useLast").onclick = function(){
+  var v = result !== null ? result : (expr ? (function(){ try { return evaluate(expr); } catch(e){ return null; } })() : null);
+  if (v === null || !isFinite(v)){ toast("No result yet"); return; }
+  $("#amt").value = String(v); convert(); toast("Pulled last result");
+};
+$("#copyConv").onclick = function(){
+  var t = $("#convOut").textContent;
+  if (!t || t === "—"){ toast("Nothing to copy"); return; }
+  copyText(t);
+};
+
+addEventListener("keydown", function(e){
+  if (e.key === "Escape"){ closeDrawer(); closeHist(); closeConv(); return; }
+  if (!$("#convSheet").classList.contains("hide")) return;
+  if (!$("#histSheet").classList.contains("hide")) return;
+  if (document.activeElement === cmdInput) return;
+  var k = e.key;
+  if (/^[0-9.]$/.test(k)) press("num", k);
+  else if (k === "+") press("op", "+");
+  else if (k === "-") press("op", "−");
+  else if (k === "*") press("op", "×");
+  else if (k === "/"){ e.preventDefault(); press("op", "÷"); }
+  else if (k === "Enter" || k === "=") press("eq");
+  else if (k === "Backspace") press("del");
+  else if (k === "%") press("pct");
+});
+
+history = load(LS_H, []);
+var m = load(LS_M, { m: 0, h: false });
+mem = m.m || 0; hasMem = !!m.h;
+
+$("#footHint").textContent = defaultHint();
+$("#voiceTip").textContent = SR
+  ? "Voice: tap ◉ and speak. Or tap ⌨ and dictate — the orange bar runs it."
+  : "Tap ⌨, hit the mic on Futo, talk, then stop. The orange bar fills and runs it. Tap the bar to run early. Futo's dictation is on-device, so nothing leaves the phone.";
+if (!SR) $("#micBtn").style.opacity = ".4";
+
+render();
+})();
+</script>
+</body>
+  </html>
